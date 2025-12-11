@@ -93,6 +93,8 @@ export class AuctionStack extends cdk.Stack {
       memorySize: 128,
       environment: {
         REGION: "eu-west-1",
+        BIDS_TABLE_NAME: bids.tableName,
+      
       },
     });
 
@@ -117,6 +119,10 @@ topic.addSubscription(
   })
 );
 
+    topic.addSubscription(
+  new subs.LambdaSubscription(lambdaC)
+);
+
 
     lambdaA.addEventSource(
       new events.SqsEventSource(queue, {
@@ -128,7 +134,8 @@ topic.addSubscription(
     // Permissions
 
     auctioStock.grantReadWriteData(lambdaA);
-    
+    bids.grantReadWriteData(lambdaC);
+
     // Output
 
     new cdk.CfnOutput(this, "SNS Topic ARN", {
