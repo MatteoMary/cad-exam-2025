@@ -88,6 +88,8 @@ export class AuctionStack extends cdk.Stack {
       },
     });
 
+    
+
     // Subscriptions
 
     topic.addSubscription(

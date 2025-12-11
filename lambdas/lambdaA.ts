@@ -2,11 +2,10 @@
 import { SQSHandler } from "aws-lambda";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
-import { DBAuctionItem , AuctionItem } from "../shared/types";
-const ddbDocClient = createDDbDocClient();
+import { DBAuctionItem , AuctionItem, AuctionType } from "../shared/types";
 
-
-// test 
+const ddbClient = new DynamoDBClient({});
+const ddbDocClient = DynamoDBDocumentClient.from(ddbClient);
 
 
 
@@ -15,20 +14,27 @@ export const handler: SQSHandler = async (event) => {
 
   for (const record of event.Records) {
     const auctionItem = JSON.parse(record.body) as AuctionItem;
-    const dbItem: DBAuctionItem = {
-      ...auctionItem,
-      auctionType: "Public",  // Hardcoded for now.
-    }
-    await ddbDocClient.send(
-      new PutCommand({
-        TableName: process.env.TABLE_NAME,
-        Item: {
-          ...dbItem,
-        },
-      })
-    );
+
+    const auctionTypeAttr =
+  (record.messageAttributes?.auction_type?.stringValue ?? "Public") as AuctionType;
+
+const dbItem: DBAuctionItem = {
+  ...auctionItem,
+  auctionType: auctionTypeAttr,
+};
+
+    console.log("DB item", JSON.stringify(dbItem));
+
+    const command = new PutCommand({
+      TableName: process.env.TABLE_NAME,
+      Item: dbItem,
+    });
+
+    await ddbDocClient.send(command);
   }
 };
+
+
 
 function createDDbDocClient() {
   const ddbClient = new DynamoDBClient({ region: process.env.REGION });
