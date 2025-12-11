@@ -5,6 +5,11 @@ import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
 import { DBAuctionItem , AuctionItem } from "../shared/types";
 const ddbDocClient = createDDbDocClient();
 
+
+// test 
+
+
+
 export const handler: SQSHandler = async (event) => {
   console.log("Event ", JSON.stringify(event));
 
