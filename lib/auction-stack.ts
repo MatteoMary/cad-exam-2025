@@ -47,9 +47,17 @@ export class AuctionStack extends cdk.Stack {
 
     // Integration infrastructure
 
+    const dlq = new sqs.Queue(this, "AuctionDLQ", {
+  receiveMessageWaitTime: cdk.Duration.seconds(10),
+});
+
     const queue = new sqs.Queue(this, "AuctionQ", {
-      receiveMessageWaitTime: cdk.Duration.seconds(10),
-    });
+  receiveMessageWaitTime: cdk.Duration.seconds(10),
+  deadLetterQueue: {
+    queue: dlq,
+    maxReceiveCount: 1,
+  },
+});
 
     const topic = new sns.Topic(this, "AuctionTopic", {
       displayName: "New Image topic",
@@ -88,7 +96,13 @@ export class AuctionStack extends cdk.Stack {
       },
     });
 
-    
+    const dlqEventSource = new events.SqsEventSource(dlq, {
+  batchSize: 5,
+  maxBatchingWindow: cdk.Duration.seconds(10),
+});
+
+lambdaB.addEventSource(dlqEventSource);
+
 
     // Subscriptions
 

@@ -18,6 +18,27 @@ export const handler: SQSHandler = async (event) => {
     const auctionTypeAttr =
   (record.messageAttributes?.auction_type?.stringValue ?? "Public") as AuctionType;
 
+    for (const record of event.Records) {
+  const auctionItem = JSON.parse(record.body) as AuctionItem;
+
+  const auctionTypeAttr =
+    (record.messageAttributes?.auction_type?.stringValue ?? "Public") as AuctionType;
+
+  if (auctionItem.marketValue < auctionItem.minimumPrice) {
+    console.log(
+      "Invalid auction item – marketValue < minimumPrice",
+      JSON.stringify(auctionItem)
+    );
+    throw new Error("Invalid auction item: marketValue less than minimumPrice");
+  }
+
+  const dbItem: DBAuctionItem = {
+    ...auctionItem,
+    auctionType: auctionTypeAttr,
+  };
+}
+
+
 const dbItem: DBAuctionItem = {
   ...auctionItem,
   auctionType: auctionTypeAttr,
